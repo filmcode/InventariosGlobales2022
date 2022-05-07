@@ -43,6 +43,7 @@ Route::group(['middleware' => ['auth']], function(){
     Route::resource('carros', CarroController::class);
     Route::resource('grafica', GraficaController::class);
     Route::post('/ajaxGrafica', [GraficaController::class, 'ajaxGrafica']);
+    Route::post('/ajaxEstado', [CarroController::class, 'ajaxEstado']);
     Route::get('/notification', function () {
         $correo = new NotificationCars;
 

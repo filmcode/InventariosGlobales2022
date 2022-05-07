@@ -31,9 +31,11 @@
                 <th scope="col">Observaciones</th>
             </tr>
         </thead>
-        <tbody class="p-2 text-dark bg-opacity-25">
-            @foreach( $carros as  $carro)
+        <tbody class="p-2 text-dark bg-opacity-25">    
+            @foreach( $carros['data'] as  $carro)
+            
             <tr>
+                
                 <td>{{$carro['ID']}}</td>
                 <td>{{$carro['Agencia']}}</td>
                 <td>{{$carro['NumerodeInventario1']}}</td>
@@ -50,7 +52,36 @@
                 <td>{{$carro['Demo']}}</td>
                 <td>{{$carro['NumeroDeSerie']}}</td>
                 <td>{{$carro['NombreAgente']}}</td>
-                <td>{{$carro['Estatus']}}</td>
+                <td>
+                    @php
+                        $estado_resultado = 0;
+                    @endphp
+                    @foreach( $estados as  $estado)
+                        @if($carro['ID'] == $estado->id_api)
+                            @if($estado_resultado < 1)
+                                <!-- fecha inicio -->
+                                @php
+                                    $date_start = date_create_from_format('Y-m-d H:i:s', $estado->created_at);
+                                @endphp
+                                <!-- valida si pasaron 72 horas -->
+                                @if(!$CarroController->Horas($date_start))
+                                    @php
+                                        $estado_resultado = 1;
+                                    @endphp
+                                @endif
+                            @endif
+                        @endif
+                    @endforeach
+                    <!-- Mostrar respuesta -->
+                    @if($estado_resultado)
+                    Reservado
+                    @else
+                        <select name="estado" data-id="{{$carro['ID']}}">
+                                    <option value="0">Libre</option>
+                                    <option value="1">Reservado</option>
+                        </select>
+                    @endif
+                </td>
                 <td>{{$carro['Observaciones']}}</td>
             </tr>
             @endforeach
@@ -66,6 +97,7 @@
 @stop
 
 @section('js')
+    <script src="/js/reservar.js"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
