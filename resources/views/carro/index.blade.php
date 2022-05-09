@@ -55,26 +55,24 @@
                 <td>
                     @php
                         $estado_resultado = 0;
+                        $reservado = 0;
                     @endphp
                     @foreach( $estados as  $estado)
                         @if($carro['ID'] == $estado->id_api)
                             @if($estado_resultado < 1)
-                                <!-- fecha inicio -->
-                                @php
+                            <!-- fecha inicio -->
+                            <!-- valida si pasaron 72 horas -->
+                            @php
                                     $date_start = date_create_from_format('Y-m-d H:i:s', $estado->created_at);
+                                    $estado_resultado = $CarroController->Horas($date_start);
+                                    $reservado =  $CarroController->Horas($date_start, 2);
                                 @endphp
-                                <!-- valida si pasaron 72 horas -->
-                                @if(!$CarroController->Horas($date_start))
-                                    @php
-                                        $estado_resultado = 1;
-                                    @endphp
-                                @endif
                             @endif
                         @endif
                     @endforeach
                     <!-- Mostrar respuesta -->
                     @if($estado_resultado)
-                    Reservado
+                    Reservado aproximandamente {{$reservado}}
                     @else
                         <select name="estado" data-id="{{$carro['ID']}}">
                                     <option value="0">Libre</option>
@@ -82,7 +80,33 @@
                         </select>
                     @endif
                 </td>
-                <td>{{$carro['Observaciones']}}</td>
+                <td class="text-center">{{$carro['Observaciones']}}
+                    @php
+                        $observaciones_resultado = 0;
+                    @endphp
+                    @foreach($observaciones as  $observacion)
+                        @if($carro['ID'] == $observacion->id_api)
+                            @if(!$observaciones_resultado)
+                                <!-- valida si pasaron 72 horas -->
+                                @php
+                                    if($observacion->descripcion) {
+                                        $observaciones_resultado = $observacion->descripcion;
+                                    } else {
+                                        $observaciones_resultado = '';
+                                    }
+                                @endphp
+                            @endif
+                        @endif
+                    @endforeach
+                    @if($observaciones_resultado != 0)
+                    <a href="/observaciones/{{$carro['ID']}}"  class="rounded btn btn-warning text-white font-bold mr-2">Editar</a><br>
+                    <p>
+                       {{$observaciones_resultado}}
+                    </p>
+                    @else
+                        <a href="/observaciones/{{$carro['ID']}}" class="rounded btn btn-info text-white font-bold mr-2">Agregar</a>
+                    @endif
+                </td>
             </tr>
             @endforeach
         </tbody>

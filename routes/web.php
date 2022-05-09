@@ -11,6 +11,7 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\CarroController; 
 use App\Http\Controllers\GraficaController; 
+use App\Http\Controllers\ObservacionesController; 
 
 use App\Mail\NotificationCars;
 use Illuminate\Support\Facades\Mail;
@@ -44,6 +45,9 @@ Route::group(['middleware' => ['auth']], function(){
     Route::resource('grafica', GraficaController::class);
     Route::post('/ajaxGrafica', [GraficaController::class, 'ajaxGrafica']);
     Route::post('/ajaxEstado', [CarroController::class, 'ajaxEstado']);
+    Route::get('/observaciones/{id}', [ObservacionesController::class, 'index']);
+    Route::post('/observaciones/{id_api}', [ObservacionesController::class, 'create']);
+    Route::post('/observaciones/edit/{id_api}', [ObservacionesController::class, 'update']);
     Route::get('/notification', function () {
         $correo = new NotificationCars;
 

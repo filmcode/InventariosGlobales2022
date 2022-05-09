@@ -52,13 +52,14 @@ class CarroController extends Controller
         $carros = json_decode($response->getBody(), true);
         // $carros = $carrosJson['data'];
         $estados = DB::table('estados')->orderBy('id','DESC')->get();
-        return view('carro.index', compact('estados', 'carros'))->with('CarroController', $this);
+        $observaciones = DB::table('observaciones')->orderBy('id','DESC')->get();
+        return view('carro.index', compact('estados','observaciones','carros'))->with('CarroController', $this);
         // return '<pre>'.
         //         print_r($carros['data']).
         //         '</pre>';
     }
 
-    public function Horas($date_start) {
+    public function Horas($date_start, $options = 0) {
         $date_final = date_create_from_format('Y-m-d H:i:s', date('Y-m-d H:i:s'));
         // $date_final = date_create_from_format('Y-m-d H:i:s', '2022-05-01 2:09:00');
         $interval = (array) date_diff($date_start, $date_final);
@@ -74,12 +75,18 @@ class CarroController extends Controller
         // print_r($interval);
         // echo '</pre>';
         $tiempo = ($date_d+$date_h+$date_i+$date_s);
-        if ($tiempo >= 4320) {
-           return 1;
-        } elseif ($date_y > 0 || $date_m > 0) {
-            return 1;
-        } else {
-            return 0;
+        
+        // options
+        if($options == 2) {
+            return floor($tiempo);
+        }else {
+            if ($tiempo >= 4320) {
+                return 0;
+            } elseif ($date_y > 0 || $date_m > 0) {
+                 return 0;
+            } else {
+                 return 1;
+            }
         }
     }
     
