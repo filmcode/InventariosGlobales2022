@@ -78,7 +78,7 @@ class CarroController extends Controller
         
         // options
         if($options == 2) {
-            return floor($tiempo);
+            return floor($tiempo / 60);
         }else {
             if ($tiempo >= 4320) {
                 return 0;
