@@ -72,31 +72,48 @@ class ProductoController extends Controller
         $dataCars = $request->validate([
             'linea' => 'required', 'intercambio' => ' ', 'catalogo' => 'required', 'modelo' => 'required', 'serie' => 'required', 'color' => 'required', 'ubicacion' => 'required', 'costo' => 'required', 'estatus' => ' ', 'observaciones' => ' ','apartado' => ' ' 
         ]);
-        
-        if ($request->file('files')) {
-            $user_id = Auth::id();
-            $request->merge(['user_id' => $user_id]);
-            $product = Producto::create($request->all());
-        }else {
-            $product = false;
-        }
-        if ($product) {
-            $max_size = (int)ini_get('upload_max_filesize') * 10240;
-            $files = $request->file('files');
-            foreach ($files as $file) {
-                $uuid = Str::uuid()->toString();
-                $imageName = $uuid . "." . $file->getClientOriginalExtension();
-                if ($file->move('img/', $imageName)) {
-                    ProductImage::create([
-                        'name' => $imageName,
-                        'product_id' => $product->id
-                    ]);
-                }
+        $files = $request->file('files');
+        $control_size = true;
+        // case 'M': case 'm': return (int)$size_str * 1048576;
+        // case 'K': case 'k': return (int)$size_str * 1024;
+        // case 'G': case 'g': return (int)$size_str * 1073741824;
+        $max_size = (2 * 1048576);
+        foreach ($files as $file) {
+            if ($file->getSize() > $max_size) {
+                $control_size = false;
+                break;
             }
-            $correo = new NotificationCars($product);
-            Mail::to('gustavojaimes1993@gmail.com')->queue($correo);
-            return redirect()->route('productos.index');
-        }        
+        }
+        // die();
+        if ($control_size) {
+            if ($request->file('files')) {
+                $user_id = Auth::id();
+                $request->merge(['user_id' => $user_id]);
+                $product = Producto::create($request->all());
+            }else {
+                $product = false;
+            }
+            if ($product) {
+                foreach ($files as $file) {
+                    $uuid = Str::uuid()->toString();
+                    $imageName = $uuid . "." . $file->getClientOriginalExtension();
+                    if ($file->move('img/', $imageName)) {
+                        ProductImage::create([
+                            'name' => $imageName,
+                            'product_id' => $product->id
+                        ]);
+                    }
+                }
+                // $correo = new NotificationCars($product);
+                // Mail::to('gustavojaimes1993@gmail.com')->queue($correo);
+                return redirect()->route('productos.index');
+            }     
+        } else {
+            echo '<script>
+                        alert("alguno de los archivos exceden limite de tamaño");
+                        window.location.href = "'.route('productos.index').'"
+                    </script>';
+        }
     }
 
     /**
@@ -123,29 +140,49 @@ class ProductoController extends Controller
         $request->validate([
             'linea' => 'required', 'intercambio' => ' ', 'catalogo' => 'required', 'modelo' => 'required', 'serie' => 'required', 'color' => 'required', 'ubicacion' => 'required', 'costo' => 'required', 'estatus' => ' ', 'observaciones' => ' ', 'apartado' => ' '
         ]);
-        $product = $producto->update($request->all());
-        if ($request->file('files')) {
-            $productsImages = DB::table('product_images')->where('product_id','=', $producto['id'])->get();
-            foreach ($productsImages as $image => $value) {
-                unlink("img/" . $value->name);
+        $files = $request->file('files');
+        $control_size = true;
+        // case 'M': case 'm': return (int)$size_str * 1048576;
+        // case 'K': case 'k': return (int)$size_str * 1024;
+        // case 'G': case 'g': return (int)$size_str * 1073741824;
+        $max_size = (2 * 1048576);
+        foreach ($files as $file) {
+            if ($file->getSize() > $max_size) {
+                $control_size = false;
+                break;
             }
-            $delImages = DB::table('product_images')->where('product_id','=', $producto['id'])->delete();
-            if ($delImages) {
-                $max_size = (int)ini_get('upload_max_filesize') * 10240;
-                $files = $request->file('files');
-                foreach ($files as $file) {
-                    $uuid = Str::uuid()->toString();
-                    $imageName = $uuid . "." . $file->getClientOriginalExtension();
-                    if ($file->move('img/', $imageName)) {
-                        ProductImage::create([
-                            'name' => $imageName,
-                            'product_id' => $producto->id
-                        ]);
+        }
+
+       if ($control_size) {
+            $product = $producto->update($request->all());
+            if ($request->file('files')) {
+                $productsImages = DB::table('product_images')->where('product_id','=', $producto['id'])->get();
+                foreach ($productsImages as $image => $value) {
+                    unlink("img/" . $value->name);
+                }
+                $delImages = DB::table('product_images')->where('product_id','=', $producto['id'])->delete();
+                if ($delImages) {
+                    $max_size = (int)ini_get('upload_max_filesize') * 10240;
+                    $files = $request->file('files');
+                    foreach ($files as $file) {
+                        $uuid = Str::uuid()->toString();
+                        $imageName = $uuid . "." . $file->getClientOriginalExtension();
+                        if ($file->move('img/', $imageName)) {
+                            ProductImage::create([
+                                'name' => $imageName,
+                                'product_id' => $producto->id
+                            ]);
+                        }
                     }
                 }
             }
-        }
-        return redirect()->route('productos.index');
+            return redirect()->route('productos.index');
+       }else {
+            echo '<script>
+                alert("alguno de los archivos exceden limite de tamaño");
+                window.location.href = "'.route('productos.index').'"
+            </script>';
+       }
     }
 
     /**
@@ -158,7 +195,7 @@ class ProductoController extends Controller
     {
         $productsImages = DB::table('product_images')->where('product_id','=', $producto['id'])->get();
         foreach ($productsImages as $image => $value) {
-            unlink("img/" . $value->name);
+            // unlink("img/" . $value->name);
         }
         $producto->delete();
         return redirect()->route('productos.index');
